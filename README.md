@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Finanças - Projeto Django (Completo)
 
 Inclui:
@@ -29,3 +30,7 @@ Inclui:
 
 5. Para obter HTTPS, use o Nginx Proxy Manager apontando para SEU_IP:8000
 
+=======
+# financas_django
+app controle de finaças
+>>>>>>> 0a9b4a4f37a1ab3c0dd7e16efc3ad592345efe26
