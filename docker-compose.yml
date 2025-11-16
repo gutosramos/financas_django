@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: financas-db
+    environment:
+      POSTGRES_DB: financas
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: always
+
+  web:
+    build: .
+    container_name: financas
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: financas
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    restart: always
+
+volumes:
+  static_volume:
+  db_data:
