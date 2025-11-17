@@ -1,56 +1,130 @@
-<div class="card card-transacao card-mobile 
-            {% if item.tipo == 'entrada' %}card-entrada
-            {% elif item.tipo == 'saida' %}card-saida
-            {% else %}card-reserva{% endif %}">
-    <div class="card-body py-3">
-        <div class="d-flex justify-content-between align-items-start">
-            <div class="flex-grow-1">
-                <div class="d-flex align-items-center mb-1">
-                    <span class="badge 
-                        {% if item.tipo == 'entrada' %}bg-success
-                        {% elif item.tipo == 'saida' %}bg-danger
-                        {% else %}bg-primary{% endif %} me-2">
-                        {% if item.tipo == 'entrada' %}⬇️
-                        {% elif item.tipo == 'saida' %}⬆️
-                        {% else %}💰{% endif %}
-                    </span>
-                    <strong class="flex-grow-1">{{ item.descricao }}</strong>
-                </div>
-                <small class="text-muted d-block">
-                    {{ item.data|date:"d/m/Y" }}
-                </small>
-            </div>
-            
-            <div class="text-end">
-                <div class="{% if item.tipo == 'entrada' %}entrada
-                            {% elif item.tipo == 'saida' %}saida
-                            {% else %}reserva{% endif %} fs-5 fw-bold">
-                    R$ {{ item.valor }}
+<div class="card transacao-card mb-2">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center flex-grow-1">
+                <!-- Ícone/Identificador -->
+                <div class="transaction-icon me-3">
+                    {% if item.tipo == 'entrada' %}
+                        <i class="bi bi-arrow-down-circle text-success fs-5"></i>
+                    {% elif item.tipo == 'saida' %}
+                        <i class="bi bi-arrow-up-circle text-danger fs-5"></i>
+                    {% else %}
+                        <i class="bi bi-bookmark text-info fs-5"></i>
+                    {% endif %}
                 </div>
                 
-                {% if item.origem_id %}
-                <button class="btn btn-outline-danger btn-sm mt-2" 
-                        onclick="confirmDelete('{{ item.tipo }}', {{ item.origem_id }})">
-                    🗑️
-                </button>
-                {% endif %}
+                <!-- Informações principais -->
+                <div class="transaction-info flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title mb-1">{{ item.descricao }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                {{ item.data|date:"d/m/Y" }}
+                            </small>
+                            {% if item.categoria %}
+                            <small class="text-muted ms-2">
+                                <i class="bi bi-tag me-1"></i>
+                                {{ item.categoria }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Valor -->
+                        <div class="text-end ms-3">
+                            <strong class="{% if item.tipo == 'entrada' %}text-success{% elif item.tipo == 'saida' %}text-danger{% else %}text-info{% endif %}">
+                                R$ {{ item.valor }}
+                            </strong>
+                            {% if item.parcelamento %}
+                            <small class="d-block text-muted">
+                                {{ item.parcelamento }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="transaction-actions ps-3">
+                <div class="btn-group btn-group-sm" role="group">
+                    {% if item.id %}
+                        {% if item.tipo == 'entrada' %}
+                            <a href="{% url 'excluir_entrada' item.id %}" class="btn btn-outline-danger btn-excluir" 
+                               title="Excluir entrada" 
+                               onclick="return confirm('Tem certeza que deseja excluir esta entrada?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% elif item.tipo == 'saida' %}
+                            <a href="{% url 'excluir_saida' item.id %}" class="btn btn-outline-danger btn-excluir" 
+                               title="Excluir saída" 
+                               onclick="return confirm('Tem certeza que deseja excluir esta saída?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% elif item.tipo == 'reserva' %}
+                            <a href="{% url 'excluir_reserva' item.id %}" class="btn btn-outline-danger btn-excluir" 
+                               title="Excluir reserva" 
+                               onclick="return confirm('Tem certeza que deseja excluir esta reserva?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% else %}
+                            <!-- Fallback para tipo desconhecido -->
+                            <a href="{% url 'excluir_entrada' item.id %}" class="btn btn-outline-danger btn-excluir" 
+                               title="Excluir" 
+                               onclick="return confirm('Tem certeza que deseja excluir este item?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <button class="btn btn-outline-secondary btn-excluir" title="Não é possível excluir" disabled>
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-function confirmDelete(tipo, id) {
-    if (confirm('Tem certeza que deseja excluir esta transação?')) {
-        let url = '';
-        if (tipo === 'entrada') {
-            url = '{% url "excluir_entrada" 0 %}'.replace('0', id);
-        } else if (tipo === 'saida') {
-            url = '{% url "excluir_saida" 0 %}'.replace('0', id);
-        } else {
-            url = '{% url "excluir_reserva" 0 %}'.replace('0', id);
-        }
-        window.location.href = url;
+<style>
+/* Estilos para o botão de excluir */
+.btn-excluir {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: scale(1.05);
+}
+
+.btn-outline-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Espaçamento para mobile */
+@media (max-width: 576px) {
+    .btn-excluir {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .transaction-actions {
+        min-width: 44px;
     }
 }
-</script>
+</style>

@@ -32,10 +32,9 @@
 </div>
 
 <!-- ===================== RESUMO DO MÊS ===================== -->
-<!-- ===================== RESUMO DO MÊS ===================== -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
+    <div class="col-md-3 mb-2">
+        <div class="card text-white bg-success h-100">
             <div class="card-body">
                 <h6 class="card-title">Entradas ({{ mes_atual }})</h6>
                 <h4 class="card-text">R$ {{ total_entradas }}</h4>
@@ -43,8 +42,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
+    <div class="col-md-3 mb-2">
+        <div class="card text-white bg-danger h-100">
             <div class="card-body">
                 <h6 class="card-title">Saídas ({{ mes_atual }})</h6>
                 <h4 class="card-text">R$ {{ total_saidas }}</h4>
@@ -52,8 +51,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
+    <div class="col-md-3 mb-2">
+        <div class="card text-white bg-info h-100">
             <div class="card-body">
                 <h6 class="card-title">Reservas ({{ mes_atual }})</h6>
                 <h4 class="card-text">R$ {{ total_reservas }}</h4>
@@ -61,8 +60,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white {% if saldo >= 0 %}bg-primary{% else %}bg-warning{% endif %}">
+    <div class="col-md-3 mb-2">
+        <div class="card text-white {% if saldo >= 0 %}bg-primary{% else %}bg-warning{% endif %} h-100">
             <div class="card-body">
                 <h6 class="card-title">Saldo ({{ mes_atual }})</h6>
                 <h4 class="card-text">R$ {{ saldo }}</h4>
@@ -73,77 +72,328 @@
 </div>
 
 <!-- ===================== BOTÕES DE AÇÃO ===================== -->
-<div class="d-grid gap-2 d-md-flex mb-3">
-  <a href="{% url 'nova_entrada' %}" class="btn btn-success me-md-2">Nova Entrada</a>
-  <a href="{% url 'nova_saida' %}" class="btn btn-danger me-md-2">Nova Saída</a>
-  <a href="{% url 'nova_reserva' %}" class="btn btn-reserva">Nova Reserva</a>
+<div class="d-grid gap-2 d-md-flex mb-4">
+  <a href="{% url 'nova_entrada' %}" class="btn btn-success me-md-2">
+    <i class="bi bi-plus-circle"></i> Nova Entrada
+  </a>
+  <a href="{% url 'nova_saida' %}" class="btn btn-danger me-md-2">
+    <i class="bi bi-dash-circle"></i> Nova Saída
+  </a>
+  <a href="{% url 'nova_reserva' %}" class="btn btn-reserva">
+    <i class="bi bi-bookmark"></i> Nova Reserva
+  </a>
 </div>
 
 <!-- ===================== ABAS ===================== -->
-<ul class="nav nav-tabs mb-3">
+<ul class="nav nav-tabs mb-3" id="extratoTabs">
   {% for tab in abas %}
     <li class="nav-item">
-      <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#{{ tab.id }}">{{ tab.label }}</button>
+      <button class="nav-link {% if forloop.first %}active{% endif %}" 
+              data-bs-toggle="tab" 
+              data-bs-target="#{{ tab.id }}"
+              type="button">
+        {{ tab.label }}
+        {% if tab.id == 'entradas' and entradas %}
+          <span class="badge bg-success ms-1">{{ entradas|length }}</span>
+        {% elif tab.id == 'saidas' and saidas %}
+          <span class="badge bg-danger ms-1">{{ saidas|length }}</span>
+        {% elif tab.id == 'reservas' and reservas %}
+          <span class="badge bg-info ms-1">{{ reservas|length }}</span>
+        {% elif tab.id == 'extrato' and extrato %}
+          <span class="badge bg-primary ms-1">{{ extrato|length }}</span>
+        {% endif %}
+      </button>
     </li>
   {% endfor %}
 </ul>
 
 <!-- ===================== CONTEÚDO DAS ABAS ===================== -->
-<div class="tab-content">
-  {% for tab in abas %}
-    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ tab.id }}">
-      
-      {% if tab.id == 'extrato' %}
-        {% for item in extrato %}
-          {% include 'partials/transacao_card.html' with item=item %}
-        {% empty %}
-          <p class="text-center text-muted">Nenhuma transação neste período.</p>
-        {% endfor %}
+<div class="tab-content" id="extratoTabContent">
+  
+  <!-- ABA EXTRATO (TODAS AS TRANSAÇÕES) -->
+  <div class="tab-pane fade show active" id="extrato">
+    {% if extrato %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in extrato %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  {% if item.tipo == 'entrada' %}
+                    <i class="bi bi-arrow-down-circle text-success me-2"></i>
+                  {% elif item.tipo == 'saida' %}
+                    <i class="bi bi-arrow-up-circle text-danger me-2"></i>
+                  {% else %}
+                    <i class="bi bi-bookmark text-info me-2"></i>
+                  {% endif %}
+                  <strong>{{ item.descricao }}</strong>
+                </div>
+              </td>
+              <td>{{ item.data|date:"d/m/Y" }}</td>
+              <td>
+                <span class="badge {% if item.tipo == 'entrada' %}bg-success{% elif item.tipo == 'saida' %}bg-danger{% else %}bg-info{% endif %}">
+                  {{ item.tipo|title }}
+                </span>
+              </td>
+              <td>
+                <strong class="{% if item.tipo == 'entrada' %}text-success{% elif item.tipo == 'saida' %}text-danger{% else %}text-info{% endif %}">
+                  R$ {{ item.valor }}
+                </strong>
+              </td>
+              <td class="text-end">
+                <!-- DEBUG: Descomente para verificar IDs -->
+                <!-- ID: {{ item.id|default:"NONE" }} | Tipo: {{ item.tipo }} -->
+                
+                {% if item.id %}
+                  {% if item.tipo == 'entrada' %}
+                    <a href="{% url 'excluir_entrada' item.id %}" 
+                       class="btn btn-sm btn-outline-danger" 
+                       title="Excluir entrada"
+                       onclick="return confirm('Tem certeza que deseja excluir esta entrada?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  {% elif item.tipo == 'saida' %}
+                    <a href="{% url 'excluir_saida' item.id %}" 
+                       class="btn btn-sm btn-outline-danger" 
+                       title="Excluir saída"
+                       onclick="return confirm('Tem certeza que deseja excluir esta saída?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  {% elif item.tipo == 'reserva' %}
+                    <a href="{% url 'excluir_reserva' item.id %}" 
+                       class="btn btn-sm btn-outline-danger" 
+                       title="Excluir reserva"
+                       onclick="return confirm('Tem certeza que deseja excluir esta reserva?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  {% endif %}
+                {% else %}
+                  <button class="btn btn-sm btn-outline-secondary" disabled title="ID não encontrado">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-receipt display-4 d-block mb-3"></i>
+        <h5>Nenhuma transação encontrada</h5>
+        <p class="mb-0">Comece adicionando sua primeira transação usando os botões acima.</p>
+      </div>
+    {% endif %}
+  </div>
 
-      {% elif tab.id == 'entradas' %}
-        {% for item in entradas %}
-          {% include 'partials/transacao_card.html' with item=item %}
-        {% empty %}
-          <p class="text-center text-muted">Nenhuma entrada neste período.</p>
-        {% endfor %}
+  <!-- ABA ENTRADAS -->
+  <div class="tab-pane fade" id="entradas">
+    {% if entradas %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in entradas %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-arrow-down-circle text-success me-2"></i>
+                  <strong>{{ item.descricao }}</strong>
+                </div>
+              </td>
+              <td>{{ item.data|date:"d/m/Y" }}</td>
+              <td>
+                <strong class="text-success">R$ {{ item.valor }}</strong>
+              </td>
+              <td class="text-end">
+                {% if item.id %}
+                  <a href="{% url 'excluir_entrada' item.id %}" 
+                     class="btn btn-sm btn-outline-danger" 
+                     title="Excluir entrada"
+                     onclick="return confirm('Tem certeza que deseja excluir esta entrada?')">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                {% else %}
+                  <button class="btn btn-sm btn-outline-secondary" disabled title="ID não encontrado">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-arrow-down-circle display-4 d-block mb-3"></i>
+        <h5>Nenhuma entrada encontrada</h5>
+        <p class="mb-0">Adicione entradas usando o botão "Nova Entrada".</p>
+      </div>
+    {% endif %}
+  </div>
 
-      {% elif tab.id == 'saidas' %}
-        {% for item in saidas %}
-          {% include 'partials/transacao_card.html' with item=item %}
-        {% empty %}
-          <p class="text-center text-muted">Nenhuma saída neste período.</p>
-        {% endfor %}
+  <!-- ABA SAÍDAS -->
+  <div class="tab-pane fade" id="saidas">
+    {% if saidas %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in saidas %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-arrow-up-circle text-danger me-2"></i>
+                  <strong>{{ item.descricao }}</strong>
+                </div>
+              </td>
+              <td>{{ item.data|date:"d/m/Y" }}</td>
+              <td>
+                <strong class="text-danger">R$ {{ item.valor }}</strong>
+              </td>
+              <td class="text-end">
+                {% if item.id %}
+                  <a href="{% url 'excluir_saida' item.id %}" 
+                     class="btn btn-sm btn-outline-danger" 
+                     title="Excluir saída"
+                     onclick="return confirm('Tem certeza que deseja excluir esta saída?')">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                {% else %}
+                  <button class="btn btn-sm btn-outline-secondary" disabled title="ID não encontrado">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-arrow-up-circle display-4 d-block mb-3"></i>
+        <h5>Nenhuma saída encontrada</h5>
+        <p class="mb-0">Adicione saídas usando o botão "Nova Saída".</p>
+      </div>
+    {% endif %}
+  </div>
 
-      {% elif tab.id == 'reservas' %}
-        {% for item in reservas %}
-          {% include 'partials/transacao_card.html' with item=item %}
-        {% empty %}
-          <p class="text-center text-muted">Nenhuma reserva neste período.</p>
-        {% endfor %}
+  <!-- ABA RESERVAS -->
+  <div class="tab-pane fade" id="reservas">
+    {% if reservas %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in reservas %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-bookmark text-info me-2"></i>
+                  <strong>{{ item.descricao }}</strong>
+                </div>
+              </td>
+              <td>{{ item.data|date:"d/m/Y" }}</td>
+              <td>
+                <strong class="text-info">R$ {{ item.valor }}</strong>
+              </td>
+              <td class="text-end">
+                {% if item.id %}
+                  <a href="{% url 'excluir_reserva' item.id %}" 
+                     class="btn btn-sm btn-outline-danger" 
+                     title="Excluir reserva"
+                     onclick="return confirm('Tem certeza que deseja excluir esta reserva?')">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                {% else %}
+                  <button class="btn btn-sm btn-outline-secondary" disabled title="ID não encontrado">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-bookmark display-4 d-block mb-3"></i>
+        <h5>Nenhuma reserva encontrada</h5>
+        <p class="mb-0">Adicione reservas usando o botão "Nova Reserva".</p>
+      </div>
+    {% endif %}
+  </div>
 
-      {% endif %}
-      
-    </div>
-  {% endfor %}
 </div>
 
-<!-- ===================== BOTÕES FLUTUANTES ===================== -->
-<div class="floating-buttons">
-  <a href="{% url 'nova_reserva' %}" class="btn btn-reserva rounded-circle floating-btn" title="Nova Reserva" style="bottom: 150px;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
-      <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
-    </svg>
-  </a>
-  <a href="{% url 'nova_entrada' %}" class="btn btn-success rounded-circle floating-btn" title="Nova Entrada" style="bottom: 80px;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
-      <path d="M8 7v6m0-6V1m0 6H2m6 0h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-  </a>
-  <a href="{% url 'nova_saida' %}" class="btn btn-danger rounded-circle floating-btn" title="Nova Saída">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
-      <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm4 4a.5.5 0 0 0-.374.832l4 4.5a.5.5 0 0 0 .748 0l4-4.5A.5.5 0 0 0 12 6H4z"/>
-    </svg>
-  </a>
-</div>
+<style>
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-sm {
+        width: 32px;
+        height: 32px;
+        padding: 0.2rem;
+    }
+}
+</style>
 
 {% endblock %}
