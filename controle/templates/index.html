@@ -2,23 +2,81 @@
 {% block title %}Extrato - Finanças{% endblock %}
 {% block content %}
 
-<!-- ===================== SALDO E TOTAIS ===================== -->
+<!-- ===================== FILTRO POR MÊS ===================== -->
 <div class="card mb-3">
-  <div class="card-body">
-    <h5 class="card-title">Saldo:
-      <span class="{% if saldo >= 0 %}text-success{% else %}text-danger{% endif %}">R$ {{ saldo }}</span>
-    </h5>
-    <p class="mb-1">Total Entradas: <span class="entrada">R$ {{ total_entradas }}</span></p>
-    <p class="mb-1">Total Saídas: <span class="saida">R$ {{ total_saidas }}</span></p>
-    <p class="mb-0">Total Reservas: <span class="reserva">R$ {{ total_reservas }}</span></p>
-  </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="card-title mb-0">Período: {{ mes_atual }}</h5>
+                {% if mes_selecionado %}
+                <small class="text-muted">Filtro ativo: {{ mes_selecionado }}</small>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <form method="get" class="d-flex">
+                    <select name="mes" class="form-select me-2" onchange="this.form.submit()">
+                        <option value="">Mês Atual</option>
+                        {% for mes in meses_disponiveis %}
+                            <option value="{{ mes.valor }}" {% if mes.valor == mes_selecionado %}selected{% endif %}>
+                                {{ mes.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if mes_selecionado %}
+                    <a href="{% url 'index' %}" class="btn btn-outline-secondary">Hoje</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ===================== BOTÕES ===================== -->
+<!-- ===================== RESUMO DO MÊS ===================== -->
+<!-- ===================== RESUMO DO MÊS ===================== -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6 class="card-title">Entradas ({{ mes_atual }})</h6>
+                <h4 class="card-text">R$ {{ total_entradas }}</h4>
+                <small>Total: R$ {{ total_entradas_geral }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h6 class="card-title">Saídas ({{ mes_atual }})</h6>
+                <h4 class="card-text">R$ {{ total_saidas }}</h4>
+                <small>Total: R$ {{ total_saidas_geral }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h6 class="card-title">Reservas ({{ mes_atual }})</h6>
+                <h4 class="card-text">R$ {{ total_reservas }}</h4>
+                <small>Total: R$ {{ total_reservas_geral }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white {% if saldo >= 0 %}bg-primary{% else %}bg-warning{% endif %}">
+            <div class="card-body">
+                <h6 class="card-title">Saldo ({{ mes_atual }})</h6>
+                <h4 class="card-text">R$ {{ saldo }}</h4>
+                <small>Total Geral: R$ {{ saldo_geral }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== BOTÕES DE AÇÃO ===================== -->
 <div class="d-grid gap-2 d-md-flex mb-3">
   <a href="{% url 'nova_entrada' %}" class="btn btn-success me-md-2">Nova Entrada</a>
   <a href="{% url 'nova_saida' %}" class="btn btn-danger me-md-2">Nova Saída</a>
-  <a href="{% url 'nova_reserva' %}" class="btn btn-reserva">Nova Reserva</a> <!-- Botão azul -->
+  <a href="{% url 'nova_reserva' %}" class="btn btn-reserva">Nova Reserva</a>
 </div>
 
 <!-- ===================== ABAS ===================== -->
@@ -39,28 +97,28 @@
         {% for item in extrato %}
           {% include 'partials/transacao_card.html' with item=item %}
         {% empty %}
-          <p class="text-center text-muted">Nenhuma transação.</p>
+          <p class="text-center text-muted">Nenhuma transação neste período.</p>
         {% endfor %}
 
       {% elif tab.id == 'entradas' %}
         {% for item in entradas %}
           {% include 'partials/transacao_card.html' with item=item %}
         {% empty %}
-          <p class="text-center text-muted">Nenhuma entrada registrada.</p>
+          <p class="text-center text-muted">Nenhuma entrada neste período.</p>
         {% endfor %}
 
       {% elif tab.id == 'saidas' %}
         {% for item in saidas %}
           {% include 'partials/transacao_card.html' with item=item %}
         {% empty %}
-          <p class="text-center text-muted">Nenhuma saída registrada.</p>
+          <p class="text-center text-muted">Nenhuma saída neste período.</p>
         {% endfor %}
 
       {% elif tab.id == 'reservas' %}
         {% for item in reservas %}
           {% include 'partials/transacao_card.html' with item=item %}
         {% empty %}
-          <p class="text-center text-muted">Nenhuma reserva registrada.</p>
+          <p class="text-center text-muted">Nenhuma reserva neste período.</p>
         {% endfor %}
 
       {% endif %}
@@ -69,11 +127,23 @@
   {% endfor %}
 </div>
 
-<!-- ===================== BOTÃO FLUTUANTE ===================== -->
-<a href="{% url 'nova_entrada' %}" class="btn btn-primary rounded-circle floating-btn" title="Nova">
-  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" class="bi bi-plus" viewBox="0 0 16 16">
-    <path d="M8 7v6m0-6V1m0 6H2m6 0h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-  </svg>
-</a>
+<!-- ===================== BOTÕES FLUTUANTES ===================== -->
+<div class="floating-buttons">
+  <a href="{% url 'nova_reserva' %}" class="btn btn-reserva rounded-circle floating-btn" title="Nova Reserva" style="bottom: 150px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
+      <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
+    </svg>
+  </a>
+  <a href="{% url 'nova_entrada' %}" class="btn btn-success rounded-circle floating-btn" title="Nova Entrada" style="bottom: 80px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
+      <path d="M8 7v6m0-6V1m0 6H2m6 0h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <a href="{% url 'nova_saida' %}" class="btn btn-danger rounded-circle floating-btn" title="Nova Saída">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
+      <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm4 4a.5.5 0 0 0-.374.832l4 4.5a.5.5 0 0 0 .748 0l4-4.5A.5.5 0 0 0 12 6H4z"/>
+    </svg>
+  </a>
+</div>
 
 {% endblock %}

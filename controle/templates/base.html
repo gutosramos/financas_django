@@ -1,63 +1,339 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% block title %}Finanças{% endblock %}</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#0d6efd">
-<style>
-  body { padding-bottom: 80px; }
-  .entrada { color: #198754; font-weight:700; }
-  .saida { color: #dc3545; font-weight:700; }
-  .reserva { color: #0d6efd; font-weight:700; } /* AZUL */
-  
-  .card-transacao { border-left-width: 6px; }
-  .card-entrada { border-left-color: #198754; }
-  .card-saida { border-left-color: #dc3545; }
-  .card-reserva { border-left-color: #0d6efd; } /* AZUL */
-  
-  .floating-btn { position: fixed; right: 16px; bottom: 16px; z-index: 1000; }
-  
-  /* Estilo para botão de reserva */
-  .btn-reserva { 
-    background-color: #0d6efd; 
-    border-color: #0d6efd;
-    color: white;
-  }
-  .btn-reserva:hover {
-    background-color: #0b5ed7;
-    border-color: #0a58ca;
-  }
-</style>
-</head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'index' %}">Finanças</a>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finanças">
     
-    <div class="navbar-nav ms-auto">
-      {% if user.is_authenticated %}
-        <span class="navbar-text me-3">Olá, {{ user.username }}</span>
-        <a class="nav-link" href="{% url 'logout' %}">Sair</a>
-      {% else %}
-        <a class="nav-link" href="{% url 'login' %}">Entrar</a>
-      {% endif %}
+    <title>{% block title %}Finanças{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+        }
+        
+        body { 
+            padding-bottom: 80px; 
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Mobile First */
+        .container {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+        
+        /* Cards mobile */
+        .card-mobile {
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+            border: none;
+        }
+        
+        /* Cores para transações */
+        .entrada { color: var(--success-color); font-weight:700; }
+        .saida { color: var(--danger-color); font-weight:700; }
+        .reserva { color: var(--primary-color); font-weight:700; }
+        
+        .card-transacao { 
+            border-left-width: 6px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .card-entrada { border-left-color: var(--success-color); }
+        .card-saida { border-left-color: var(--danger-color); }
+        .card-reserva { border-left-color: var(--primary-color); }
+        
+        /* Botões mobile */
+        .btn-mobile {
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        .btn-reserva { 
+            background-color: var(--primary-color); 
+            color: white;
+        }
+        .btn-reserva:hover {
+            background-color: #0b5ed7;
+        }
+        
+        /* Navbar mobile */
+        .navbar-mobile {
+            background: var(--primary-color);
+            padding: 12px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .nav-item-mobile {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-link-mobile {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .nav-link-mobile.active {
+            color: white;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+        }
+        
+        /* User Menu */
+        .user-menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+        }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            font-size: 24px;
+        }
+        
+        /* Tabs mobile */
+        .nav-tabs-mobile {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            margin: 16px 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .tab-mobile {
+            flex: 1;
+            text-align: center;
+            padding: 12px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-mobile.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 16px;
+            }
+            
+            h4 {
+                font-size: 1.4rem;
+            }
+            
+            h6 {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Safe areas para iPhone */
+        @supports(padding: max(0px)) {
+            body {
+                padding-left: min(0vmin, env(safe-area-inset-left));
+                padding-right: min(0vmin, env(safe-area-inset-right));
+                padding-bottom: min(80px, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Mobile com Menu de Usuário -->
+    <nav class="navbar navbar-dark bg-primary d-md-none">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">💰 Finanças</span>
+            
+            <!-- Menu de Usuário -->
+            <div class="dropdown">
+                <button class="user-menu-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    👤
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li class="dropdown-item-text">
+                        <small>Logado como</small><br>
+                        <strong>{{ user.username }}</strong>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item text-danger">
+                                🚪 Sair
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Desktop (mantido para telas maiores) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary d-none d-md-block">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">Finanças</a>
+            
+            <div class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <span class="navbar-text me-3">Olá, {{ user.username }}</span>
+                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm">Sair</button>
+                    </form>
+                {% else %}
+                    <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-3">
+        {% block content %}{% endblock %}
     </div>
-  </div>
-</nav>
 
-<div class="container py-3">
-  {% block content %}{% endblock %}
-</div>
+    <!-- Bottom Navigation Bar - Mobile -->
+    <nav class="navbar-mobile d-md-none">
+        <div class="d-flex w-100">
+            <div class="nav-item-mobile">
+                <a href="{% url 'index' %}" class="nav-link-mobile {% if request.path == '/' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Extrato</span>
+                </a>
+            </div>
+            <div class="nav-item-mobile">
+                <a href="{% url 'nova_entrada' %}" class="nav-link-mobile">
+                    <span class="nav-icon">⬇️</span>
+                    <span>Entrada</span>
+                </a>
+            </div>
+            <div class="nav-item-mobile">
+                <a href="{% url 'nova_saida' %}" class="nav-link-mobile">
+                    <span class="nav-icon">⬆️</span>
+                    <span>Saída</span>
+                </a>
+            </div>
+            <div class="nav-item-mobile">
+                <a href="{% url 'nova_reserva' %}" class="nav-link-mobile">
+                    <span class="nav-icon">💰</span>
+                    <span>Reserva</span>
+                </a>
+            </div>
+        </div>
+    </nav>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/static/sw.js').then(function(){});
-}
-</script>
+    <!-- Floating Action Button -->
+    <button class="fab d-md-none" onclick="openActionMenu()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 6V18M18 12H6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <!-- Action Menu Modal -->
+    <div id="actionMenu" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center p-0">
+                    <a href="{% url 'nova_entrada' %}" class="btn btn-success w-100 py-3 border-0 rounded-0">
+                        <div>⬇️</div>
+                        <div>Nova Entrada</div>
+                    </a>
+                    <a href="{% url 'nova_saida' %}" class="btn btn-danger w-100 py-3 border-0 rounded-0">
+                        <div>⬆️</div>
+                        <div>Nova Saída</div>
+                    </a>
+                    <a href="{% url 'nova_reserva' %}" class="btn btn-primary w-100 py-3 border-0 rounded-0">
+                        <div>💰</div>
+                        <div>Nova Reserva</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        }
+        
+        // Action Menu
+        function openActionMenu() {
+            const modal = new bootstrap.Modal(document.getElementById('actionMenu'));
+            modal.show();
+        }
+        
+        // Prevent zoom on double tap (iOS)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Add to Home Screen prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+    </script>
 </body>
 </html>

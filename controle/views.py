@@ -4,7 +4,24 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout 
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Entrada, Saida, Reserva
+from .models import Entrada, Saida, Reserva, Movimentacao
+
+
+
+
+def criar_movimentacao(obj, tipo):
+    """
+    Cria a movimentação correspondente garantindo origem_id.
+    """
+    from .models import Movimentacao
+    Movimentacao.objects.create(
+        descricao=obj.descricao,
+        valor=obj.valor,
+        tipo=tipo,
+        data=obj.data,
+        origem_id=obj.id
+    )
+
 
 @login_required
 def index(request):
@@ -22,19 +39,19 @@ def index(request):
         ano = timezone.now().year
         mes = timezone.now().month
     
-    # Calcular primeiro e último dia do mês
-    primeiro_dia = timezone.datetime(ano, mes, 1)
+    # CORREÇÃO: Calcular datas SIMPLES e CORRETAS
+    primeiro_dia = datetime(ano, mes, 1).date()  # Primeiro dia do mês como date
     if mes == 12:
-        ultimo_dia = timezone.datetime(ano, mes, 31)
+        ultimo_dia = datetime(ano, mes, 31).date()  # Último dia de dezembro
     else:
-        ultimo_dia = timezone.datetime(ano, mes + 1, 1) - timedelta(days=1)
+        ultimo_dia = datetime(ano, mes + 1, 1).date() - timedelta(days=1)  # Último dia do mês
     
-    # Filtros para o mês selecionado
-    filtro_mes = Q(data__gte=primeiro_dia, data__lte=ultimo_dia)
+    print(f"DEBUG: Filtrando de {primeiro_dia} até {ultimo_dia}")  # Log para debug
     
-    # Dados do mês selecionado - USANDO MOVIMENTACAO
-    from .models import Movimentacao
-    movimentacoes_mes = Movimentacao.objects.filter(filtro_mes)
+    # Filtros para o mês selecionado - CORREÇÃO
+    movimentacoes_mes = Movimentacao.objects.filter(
+        data__range=[primeiro_dia, ultimo_dia]  # Usando range para ser mais preciso
+    )
     
     entradas_mes = movimentacoes_mes.filter(tipo='entrada')
     saidas_mes = movimentacoes_mes.filter(tipo='saida')
@@ -51,7 +68,7 @@ def index(request):
     total_reservas_geral = Movimentacao.objects.filter(tipo='reserva').aggregate(Sum('valor'))['valor__sum'] or 0
     saldo_geral = total_entradas_geral - total_saidas_geral - total_reservas_geral
     
-    # Preparar dados para as abas - USANDO MOVIMENTACAO
+    # Preparar dados para as abas
     extrato = []
     for mov in movimentacoes_mes.order_by('-data', '-created_at'):
         extrato.append({
@@ -64,8 +81,11 @@ def index(request):
     
     # Lista de meses disponíveis para filtro
     meses_disponiveis = []
-    primeiras_datas = Movimentacao.objects.dates('data', 'month', order='DESC')[:12]
-    for data in primeiras_datas:
+    
+    # Pegar meses de TODAS as movimentações
+    todos_meses = Movimentacao.objects.dates('data', 'month', order='DESC')[:12]
+    
+    for data in todos_meses:
         meses_disponiveis.append({
             'valor': data.strftime('%Y-%m'),
             'label': data.strftime('%B/%Y').title()
@@ -74,6 +94,8 @@ def index(request):
     context = {
         # Dados do mês
         'mes_atual': f"{primeiro_dia.strftime('%B/%Y').title()}",
+        'primeiro_dia': primeiro_dia,  # Para debug
+        'ultimo_dia': ultimo_dia,      # Para debug
         'total_entradas': total_entradas_mes,
         'total_saidas': total_saidas_mes,
         'total_reservas': total_reservas_mes,
@@ -90,7 +112,6 @@ def index(request):
         'entradas': [e for e in extrato if e['tipo'] == 'entrada'],
         'saidas': [e for e in extrato if e['tipo'] == 'saida'],
         'reservas': [e for e in extrato if e['tipo'] == 'reserva'],
-        'reservas_list': Reserva.objects.all(),
         
         # Filtros
         'mes_selecionado': f"{ano}-{mes:02d}",
@@ -106,19 +127,9 @@ def index(request):
     }
     return render(request, 'index.html', context)
 
+# ... o resto das views permanece igual ...
+
 @login_required
-def criar_movimentacao(obj, tipo):
-    """
-    Cria a movimentação correspondente garantindo origem_id.
-    """
-    from .models import Movimentacao
-    Movimentacao.objects.create(
-        descricao=obj.descricao,
-        valor=obj.valor,
-        tipo=tipo,
-        data=obj.data,
-        origem_id=obj.id
-    )
 
 
 @login_required

@@ -1,21 +1,33 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h5>Nova Reserva</h5>
-<form method="post">
-  {% csrf_token %}
-  <div class="mb-3">
-    <label class="form-label">Descrição</label>
-    <input name="descricao" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Valor</label>
-    <input name="valor" type="number" step="0.01" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Data</label>
-    <input name="data" type="date" class="form-control">
-  </div>
-  <button class="btn btn-success">Salvar</button>
-  <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
-</form>
+<div class="card card-mobile">
+    <div class="card-body">
+        <h5 class="card-title">💰 Nova Reserva</h5>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Descrição</label>
+                <input type="text" name="descricao" class="form-control" placeholder="Ex: Reserva Emergencial" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Valor</label>
+                <input type="number" name="valor" class="form-control" step="0.01" placeholder="0,00" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Data</label>
+                <input type="date" name="data" class="form-control" value="{{ timezone.now|date:'Y-m-d' }}">
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-reserva btn-mobile">Salvar Reserva</button>
+                <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-mobile">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
