@@ -1,0 +1,38 @@
+<div class="card card-transacao mb-2 
+            {% if item.tipo == 'entrada' %}card-entrada
+            {% elif item.tipo == 'saida' %}card-saida
+            {% else %}card-reserva{% endif %}">
+  <div class="card-body py-2">
+    <div class="d-flex justify-content-between">
+      <div>
+        <strong>
+          {% if item.tipo == 'entrada' %}Entrada
+          {% elif item.tipo == 'saida' %}Saída
+          {% else %}Reserva
+          {% endif %}
+        </strong><br>
+        <small class="text-muted">
+           {{ item.data|date:"j \\d\\e F \\d\\e Y" }} — {{ item.descricao }} — {{ now|date:"H:i" }}
+        </small>
+      </div>
+
+      <div class="text-end">
+        <div class="{% if item.tipo == 'entrada' %}entrada
+                    {% elif item.tipo == 'saida' %}saida
+                    {% else %}reserva{% endif %}">
+          R$ {{ item.valor }}
+        </div>
+
+        {% if item.origem_id %}
+        <a href="{% if item.tipo == 'entrada' %}{% url 'excluir_entrada' item.origem_id %}
+                   {% elif item.tipo == 'saida' %}{% url 'excluir_saida' item.origem_id %}
+                   {% else %}{% url 'excluir_reserva' item.origem_id %}{% endif %}"
+           class="btn btn-sm btn-outline-danger mt-1"
+           onclick="return confirm('Tem certeza que deseja excluir esta transação?')">
+          Excluir
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
