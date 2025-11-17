@@ -37,6 +37,15 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'index' %}">Finanças</a>
+    
+    <div class="navbar-nav ms-auto">
+      {% if user.is_authenticated %}
+        <span class="navbar-text me-3">Olá, {{ user.username }}</span>
+        <a class="nav-link" href="{% url 'logout' %}">Sair</a>
+      {% else %}
+        <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+      {% endif %}
+    </div>
   </div>
 </nav>
 
