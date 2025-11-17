@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout 
 from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import Entrada, Saida, Reserva
@@ -31,50 +32,39 @@ def index(request):
     # Filtros para o mês selecionado
     filtro_mes = Q(data__gte=primeiro_dia, data__lte=ultimo_dia)
     
-    # Dados do mês selecionado
-    entradas_mes = Entrada.objects.filter(filtro_mes)
-    saidas_mes = Saida.objects.filter(filtro_mes)
+    # Dados do mês selecionado - USANDO MOVIMENTACAO
+    from .models import Movimentacao
+    movimentacoes_mes = Movimentacao.objects.filter(filtro_mes)
+    
+    entradas_mes = movimentacoes_mes.filter(tipo='entrada')
+    saidas_mes = movimentacoes_mes.filter(tipo='saida')
+    reservas_mes = movimentacoes_mes.filter(tipo='reserva')
     
     total_entradas_mes = entradas_mes.aggregate(Sum('valor'))['valor__sum'] or 0
     total_saidas_mes = saidas_mes.aggregate(Sum('valor'))['valor__sum'] or 0
-    total_reservas_mes = entradas_mes.aggregate(Sum('valor_reservado'))['valor_reservado__sum'] or 0
+    total_reservas_mes = reservas_mes.aggregate(Sum('valor'))['valor__sum'] or 0
     saldo_mes = total_entradas_mes - total_saidas_mes - total_reservas_mes
     
     # Dados totais (todos os meses)
-    total_entradas_geral = Entrada.objects.aggregate(Sum('valor'))['valor__sum'] or 0
-    total_saidas_geral = Saida.objects.aggregate(Sum('valor'))['valor__sum'] or 0
-    total_reservas_geral = Entrada.objects.aggregate(Sum('valor_reservado'))['valor_reservado__sum'] or 0
+    total_entradas_geral = Movimentacao.objects.filter(tipo='entrada').aggregate(Sum('valor'))['valor__sum'] or 0
+    total_saidas_geral = Movimentacao.objects.filter(tipo='saida').aggregate(Sum('valor'))['valor__sum'] or 0
+    total_reservas_geral = Movimentacao.objects.filter(tipo='reserva').aggregate(Sum('valor'))['valor__sum'] or 0
     saldo_geral = total_entradas_geral - total_saidas_geral - total_reservas_geral
     
-    # Preparar dados para as abas
+    # Preparar dados para as abas - USANDO MOVIMENTACAO
     extrato = []
-    
-    # Adicionar entradas
-    for entrada in entradas_mes:
+    for mov in movimentacoes_mes.order_by('-data', '-created_at'):
         extrato.append({
-            'tipo': 'entrada',
-            'descricao': entrada.descricao,
-            'valor': entrada.valor,
-            'data': entrada.data,
-            'origem_id': entrada.id
+            'tipo': mov.tipo,
+            'descricao': mov.descricao,
+            'valor': mov.valor,
+            'data': mov.data,
+            'origem_id': mov.origem_id
         })
-    
-    # Adicionar saídas
-    for saida in saidas_mes:
-        extrato.append({
-            'tipo': 'saida',
-            'descricao': saida.descricao,
-            'valor': saida.valor,
-            'data': saida.data,
-            'origem_id': saida.id
-        })
-    
-    # Ordenar por data (mais recente primeiro)
-    extrato.sort(key=lambda x: x['data'], reverse=True)
     
     # Lista de meses disponíveis para filtro
     meses_disponiveis = []
-    primeiras_datas = Entrada.objects.dates('data', 'month', order='DESC')[:12]
+    primeiras_datas = Movimentacao.objects.dates('data', 'month', order='DESC')[:12]
     for data in primeiras_datas:
         meses_disponiveis.append({
             'valor': data.strftime('%Y-%m'),
@@ -99,6 +89,7 @@ def index(request):
         'extrato': extrato,
         'entradas': [e for e in extrato if e['tipo'] == 'entrada'],
         'saidas': [e for e in extrato if e['tipo'] == 'saida'],
+        'reservas': [e for e in extrato if e['tipo'] == 'reserva'],
         'reservas_list': Reserva.objects.all(),
         
         # Filtros
@@ -114,6 +105,7 @@ def index(request):
         ]
     }
     return render(request, 'index.html', context)
+
 @login_required
 def criar_movimentacao(obj, tipo):
     """
@@ -128,6 +120,7 @@ def criar_movimentacao(obj, tipo):
         origem_id=obj.id
     )
 
+
 @login_required
 def nova_entrada(request):
     if request.method == 'POST':
@@ -140,6 +133,7 @@ def nova_entrada(request):
         return redirect('index')
     return render(request, 'nova_entrada.html')
 
+
 @login_required
 def nova_saida(request):
     if request.method == 'POST':
@@ -151,6 +145,7 @@ def nova_saida(request):
             criar_movimentacao(saida, 'saida')
         return redirect('index')
     return render(request, 'nova_saida.html')
+
 
 @login_required
 def nova_reserva(request):
@@ -188,3 +183,7 @@ def excluir_reserva(request, id):
     return redirect('index')
 
 
+@login_required
+def custom_logout(request):
+    logout(request)
+    return redirect('login')
