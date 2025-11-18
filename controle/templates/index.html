@@ -32,13 +32,23 @@
 </div>
 
 <!-- ===================== RESUMO DO MÊS ===================== -->
+
 <div class="row mb-4">
+      <div class="col-md-3 mb-2">
+        <div class="card text-white {% if saldo >= 0 %}bg-primary{% else %}bg-warning{% endif %} h-100">
+            <div class="card-body">
+                <h6 class="card-title">Saldo ({{ mes_atual }})</h6>
+                <h4 class="card-text">R$ {{ saldo|floatformat:2 }}</h4>
+                <small>Total Geral: R$ {{ saldo_geral|floatformat:2 }}</small>
+            </div>
+        </div>
+    </div>
     <div class="col-md-3 mb-2">
         <div class="card text-white bg-success h-100">
             <div class="card-body">
                 <h6 class="card-title">Entradas ({{ mes_atual }})</h6>
-                <h4 class="card-text">R$ {{ total_entradas }}</h4>
-                <small>Total: R$ {{ total_entradas_geral }}</small>
+                <h4 class="card-text">R$ {{ total_entradas|floatformat:2 }}</h4>
+                <small>Total: R$ {{ total_entradas_geral|floatformat:2 }}</small>
             </div>
         </div>
     </div>
@@ -46,8 +56,8 @@
         <div class="card text-white bg-danger h-100">
             <div class="card-body">
                 <h6 class="card-title">Saídas ({{ mes_atual }})</h6>
-                <h4 class="card-text">R$ {{ total_saidas }}</h4>
-                <small>Total: R$ {{ total_saidas_geral }}</small>
+                <h4 class="card-text">R$ {{ total_saidas|floatformat:2 }}</h4>
+                <small>Total: R$ {{ total_saidas_geral|floatformat:2 }}</small>
             </div>
         </div>
     </div>
@@ -55,20 +65,12 @@
         <div class="card text-white bg-info h-100">
             <div class="card-body">
                 <h6 class="card-title">Reservas ({{ mes_atual }})</h6>
-                <h4 class="card-text">R$ {{ total_reservas }}</h4>
-                <small>Total: R$ {{ total_reservas_geral }}</small>
+                <h4 class="card-text">R$ {{ total_reservas|floatformat:2 }}</h4>
+                <small>Total: R$ {{ total_reservas_geral|floatformat:2 }}</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-2">
-        <div class="card text-white {% if saldo >= 0 %}bg-primary{% else %}bg-warning{% endif %} h-100">
-            <div class="card-body">
-                <h6 class="card-title">Saldo ({{ mes_atual }})</h6>
-                <h4 class="card-text">R$ {{ saldo }}</h4>
-                <small>Total Geral: R$ {{ saldo_geral }}</small>
-            </div>
-        </div>
-    </div>
+
 </div>
 
 <!-- ===================== BOTÕES DE AÇÃO ===================== -->
